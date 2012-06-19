@@ -1,25 +1,42 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-    <head>
-        <title>YarnFinder -- karta</title>
-        <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<link rel="stylesheet" href="style.css">
-	<title>YarnFinder</title>
+<?php
+//Basic: form checks for geo_area, which goes into the api request, relevant info is printed
 
-        <script type="text/javascript" src="http://kartor.eniro.se/rs/eniro.js?partnerId=[your id]"></script>
-        
+require_once('api.php');
+?>
+  <form method="post" action=<?php echo $PHP_SELF;?>>
 
-        <script type="text/javascript" src="map.js"></script>
-    </head>
+    <label for="city">Stad:</label>
+    </br> <input type="text" name="city" /></br>
+    <input type="submit" value="Hitta garn!" name="submit" />
+   
+  </form>
+<?php
+if (isset($_POST['submit'])){
 
+  $city = trim($_POST['city']);
 
-<body onload="load()">
+  $url = 'http://api.eniro.com/cs/search/basic?profile=' . $profile . '&key=' . $key . '&country=se&version=1.1.3&search_word=garn&geo_area=' . $city;
+  $response = file_get_contents($url);
+  $json = json_decode($response, true);
+  if(empty($json['adverts'])){
+    echo "<p>Tyvärr fanns det inga garnaffärer i " . $city . "!";
+  }
+    ?>
+  <div class="result"> <?php
+  foreach($json['adverts'] as $item) { 
+    echo "<p>" . $item['companyInfo']['companyName'];
+    if(!empty($item['homepage'])){
+      echo " <a href=" . $item['homepage'] . ">Hemsida</a>";
+    }
+  if(!empty($item['location']['coordinates'][0]['latitude'])){
+      echo " <a href='karta.html?lat=" . $item['location']['coordinates'][0]['latitude'] . "&lng=" . $item['location']['coordinates'][0]['longitude']. "'>Karta</a>";
+  }
+  else{
+    echo "<br/>Adress: " . $item['address']['streetName'];
+  }
+    echo "</p>";
+  }
+  echo "</div>";
+}
 
-        <h1>Karta!</h1>
-        <div class="container">
-	  <div id="mymap"></div>
-	</div>
-        
-    </body>
-</html>
+?>
